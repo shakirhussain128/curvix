@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Curvix IDE - A modern, professional code editor for web development" />
+    <meta name="keywords" content="IDE, code editor, JavaScript, React, Monaco, development" />
+    <meta name="author" content="Curvix Team" />
+    <meta property="og:title" content="Curvix IDE" />
+    <meta property="og:description" content="A sleek, user-friendly code editor built with React and Monaco" />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Curvix IDE - Professional Code Editor</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background: #070912;
+        color: #e2e8f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+      }
+      .loading {
+        text-align: center;
+        animation: fadeIn 1s ease-in-out;
+      }
+      .loading h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #2563eb;
+      }
+      .loading p {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+      }
+      .spinner {
+        border: 4px solid #1f2937;
+        border-top: 4px solid #2563eb;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      #root {
+        display: none;
+      }
+      #root.loaded {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div class="loading" id="loading">
+      <h1>Curvix IDE</h1>
+      <p>Loading your development environment...</p>
+      <div class="spinner"></div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Hide loading screen once React app is ready
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('root').classList.add('loaded');
+        }, 1000); // Small delay for smooth transition
+      });
+    </script>
+  </body>
+</html>

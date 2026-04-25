@@ -1,0 +1,270 @@
+html,
+body,
+#root,
+.App {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #070912;
+  color: #e2e8f0;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #070912;
+}
+
+.ide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  background: #111827;
+  border-bottom: 1px solid #1f2937;
+  box-shadow: inset 0 -1px 0 rgba(148, 163, 184, 0.08);
+}
+
+.ide-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ide-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.ide-title {
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #f8fafc;
+}
+
+.ide-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.ide-button {
+  border: none;
+  border-radius: 9999px;
+  padding: 10px 18px;
+  font-size: 13px;
+  background: #1f2937;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.ide-button:hover {
+  background: #374151;
+}
+
+.ide-button.active {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.ide-tabs {
+  display: flex;
+  gap: 10px;
+  padding: 14px 24px;
+  background: #0f172a;
+  border-bottom: 1px solid #1f2937;
+}
+
+.ide-tab {
+  padding: 10px 16px;
+  border-radius: 9999px;
+  background: #111827;
+  color: #cbd5e1;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.ide-tab.active {
+  background: #1f2937;
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.2);
+}
+
+.ide-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.ide-sidebar {
+  width: 240px;
+  background: #0b1221;
+  border-right: 1px solid #1f2937;
+  padding: 20px;
+  color: #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-title {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.file-item {
+  padding: 12px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.file-item:hover,
+.file-item.active {
+  background: rgba(148, 163, 184, 0.12);
+  color: #ffffff;
+}
+
+.ide-editor {
+  flex: 1;
+  min-height: 0;
+  padding: 20px;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(7, 9, 18, 1));
+}
+
+.ide-output {
+  width: 300px;
+  background: #0b1221;
+  border-left: 1px solid #1f2937;
+  padding: 20px;
+  color: #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ide-output pre {
+  background: #1f2937;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.ide-ai {
+  width: 300px;
+  background: #0b1221;
+  border-left: 1px solid #1f2937;
+  padding: 20px;
+  color: #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ide-ai textarea {
+  background: #1f2937;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  color: #cbd5e1;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.ide-ai button {
+  background: #2563eb;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.ide-ai pre {
+  background: #1f2937;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: #070912;
+  color: #e2e8f0;
+  gap: 20px;
+}
+
+.login h1 {
+  font-size: 2rem;
+  color: #2563eb;
+}
+
+.login input {
+  padding: 12px;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+  width: 300px;
+}
+
+.login button {
+  padding: 12px 24px;
+  background: #2563eb;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.ide-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 24px;
+  background: #0f172a;
+  border-top: 1px solid #1f2937;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.status-item {
+  padding: 4px 8px;
+}
