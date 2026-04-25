@@ -64,5 +64,5 @@ Curvix is built using modern, scalable technologies:
 Clone the repository:
 
 ```bash
-git clone https://github.com/<your-username>/curvix.git
+git clone https://github.com/shakirhussain128/curvix
 cd curvix
