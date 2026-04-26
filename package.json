@@ -1,0 +1,22 @@
+{
+  "name": "curvix",
+  "version": "1.0.0",
+  "description": "Curvix — AI-powered code editor built for speed, smart refactoring, and developer productivity.",
+  "main": "apps/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node apps/index.js",
+    "dev": "node apps/index.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "openai": "^4.77.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
