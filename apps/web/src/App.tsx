@@ -123,7 +123,7 @@ export default function App() {
   };
 
   const handleAI = async () => {
-    const res = await fetch(`${API_URL}/ai`, {
+    const res = await fetch(`${API_URL}/api/ai/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -132,14 +132,13 @@ export default function App() {
       body: JSON.stringify({ prompt: aiPrompt, file: code }),
     });
     const data = await res.json();
-    if (data.result) {
-      const result = JSON.parse(data.result);
-      setCode(result.content);
+    if (data.reply) {
+      setCode(data.reply);
     }
   };
 
   const handleAiAssist = async () => {
-    const res = await fetch(`${API_URL}/ai`, {
+    const res = await fetch(`${API_URL}/api/ai/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -148,8 +147,8 @@ export default function App() {
       body: JSON.stringify({ prompt: aiPrompt, file: code }),
     });
     const data = await res.json();
-    if (data.response) {
-      setAiResponse(data.response);
+    if (data.reply) {
+      setAiResponse(data.reply);
     }
   };
 
