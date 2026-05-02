@@ -1,211 +1,138 @@
 import fs from "fs";
-import http from "http";
+import path from "path";
+import Groq from "groq-sdk";
+import express from "express";
+import cors from "cors";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import dotenv from "dotenv";
 
-const load = (name) => import(name).catch(() => null);
+dotenv.config();
+const app = express();
 
-async function bootstrap() {
-  const expressMod = await load("express");
-  const corsMod = await load("cors");
-  const jwtMod = await load("jsonwebtoken");
-  const bcryptMod = await load("bcrypt");
-  const dotenvMod = await load("dotenv");
-  const openaiMod = await load("openai");
+// Middleware
+app.use(express.json());
+app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
-  const missing = [];
+const SECRET = process.env.JWT_SECRET || "curvix_mega_secret";
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const USERS_FILE = "./users.json";
+const BASE_DIR = "./workspaces";
 
-  if (!expressMod) missing.push("express");
-  if (!corsMod) missing.push("cors");
-  if (!jwtMod) missing.push("jsonwebtoken");
-  if (!bcryptMod) missing.push("bcrypt");
-  if (!dotenvMod) missing.push("dotenv");
-  if (!openaiMod) missing.push("openai");
+// Ensure workspaces directory exists
+if (!fs.existsSync(BASE_DIR)) fs.mkdirSync(BASE_DIR);
 
-  if (missing.length > 0) {
-    const server = http.createServer((req, res) => {
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({
-        status: "degraded",
-        message: "Curvix backend is running in fallback mode.",
-        missingDependencies: missing,
-        nextStep: "Run npm install in an environment with npm registry access to enable full API routes."
-      }));
-    });
-
-    server.listen(5000, () => {
-      console.log("⚠️ Curvix fallback server running on http://localhost:5000");
-      console.log(`⚠️ Missing dependencies: ${missing.join(", ")}`);
-    });
-
-    return;
-  }
-
-  const express = expressMod.default;
-  const cors = corsMod.default;
-  const jwt = jwtMod.default;
-  const bcrypt = bcryptMod.default;
-  const dotenv = dotenvMod.default;
-  const OpenAI = openaiMod.default;
-
-  dotenv.config();
-
-  const app = express();
-  app.use(express.json());
-
-  app.use(cors({
-    origin: "http://localhost:5173",
-  }));
-
-  const SECRET = process.env.JWT_SECRET || "curvix_secret";
-
-  /* ---------------- OPENAI ---------------- */
-  const client = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-
-  /* ---------------- USERS ---------------- */
-  const USERS_FILE = "./users.json";
-
-  function getUsers() {
-    if (!fs.existsSync(USERS_FILE)) return [];
-    return JSON.parse(fs.readFileSync(USERS_FILE));
-  }
-
-  function saveUsers(users) {
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-  }
-
-  /* ---------------- AUTH ---------------- */
-  app.post("/auth/signup", async (req, res) => {
-    const { email, password } = req.body;
-
-    const users = getUsers();
-
-    if (users.find((u) => u.email === email)) {
-      return res.json({ error: "User exists" });
-    }
-
-    const hashed = await bcrypt.hash(password, 10);
-
-    const user = {
-      id: Date.now().toString(),
-      email,
-      password: hashed,
-    };
-
-    users.push(user);
-    saveUsers(users);
-
-    res.json({ success: true });
-  });
-
-  app.post("/auth/login", async (req, res) => {
-    const { email, password } = req.body;
-
-    const users = getUsers();
-
-    const user = users.find((u) => u.email === email);
-    if (!user) return res.json({ error: "User not found" });
-
-    const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.json({ error: "Wrong password" });
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      SECRET
-    );
-
-    res.json({
-      token,
-      user: { id: user.id, email: user.email }
-    });
-  });
-
-  /* ---------------- AUTH MIDDLEWARE ---------------- */
-  function auth(req, res, next) {
-    const token = req.headers.authorization;
-
-    if (!token) return res.json({ error: "No token" });
-
+// Helper Functions
+const getUsers = () => {
     try {
-      const data = jwt.verify(token, SECRET);
-      req.user = data;
-      next();
-    } catch {
-      res.json({ error: "Invalid token" });
-    }
-  }
+        return fs.existsSync(USERS_FILE) ? JSON.parse(fs.readFileSync(USERS_FILE)) : [];
+    } catch (e) { return []; }
+};
+const saveUsers = (users) => fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
 
-  /* ---------------- FILE SYSTEM ---------------- */
-  const BASE = "./workspaces";
+/* ---------------- SERVER STATUS ---------------- */
+app.get("/", (req, res) => {
+    res.send("🚀 Curvix Pro Backend is Running Successfully on Port 5000!");
+});
 
-  app.get("/files", auth, (req, res) => {
-    const project = req.query.project || "main";
-
-    const dir = `${BASE}/${req.user.id}/${project}`;
-
-    if (!fs.existsSync(dir)) return res.json([]);
-
-    const files = fs.readdirSync(dir).map((file) => {
-      const content = fs.readFileSync(`${dir}/${file}`, "utf-8");
-
-      return { name: file, content };
-    });
-
-    res.json(files);
-  });
-
-  app.post("/files/save", auth, (req, res) => {
-    const { project, fileName, content } = req.body;
-
-    const dir = `${BASE}/${req.user.id}/${project}`;
-
-    fs.mkdirSync(dir, { recursive: true });
-
-    fs.writeFileSync(`${dir}/${fileName}`, content);
-
-    res.json({ success: true });
-  });
-
-  /* ---------------- AI (REAL GPT) ---------------- */
-  app.post("/ai", auth, async (req, res) => {
-    const { prompt, file } = req.body;
-
+/* ---------------- AUTH ROUTES ---------------- */
+app.post("/auth/signup", async (req, res) => {
     try {
-      const response = await client.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: "You are a senior software engineer. Return only full updated code."
-          },
-          {
-            role: "user",
-            content: `
-TASK: ${prompt}
+        const { email, password } = req.body;
+        if (!email || !password) return res.json({ error: "Missing fields" });
 
-CODE:
-${file}
-          `
-          }
-        ]
-      });
+        const users = getUsers();
+        if (users.find(u => u.email === email)) return res.json({ error: "User already exists" });
 
-      const result = response.choices[0].message.content;
-
-      res.json({ result });
+        const hashed = await bcrypt.hash(password, 10);
+        const user = { id: Date.now().toString(), email, password: hashed };
+        users.push(user);
+        saveUsers(users);
+        
+        console.log(`✅ New user signed up: ${email}`);
+        res.json({ success: true });
     } catch (err) {
-      res.json({ error: "AI failed", details: err.message });
+        res.json({ error: "Signup failed" });
     }
-  });
+});
 
-  /* ---------------- START ---------------- */
-  app.get("/", (req, res) => {
-    res.send("🚀 Curvix Backend Running");
-  });
+app.post("/auth/login", async (req, res) => {
+    const { email, password } = req.body;
+    const user = getUsers().find(u => u.email === email);
+    
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+        return res.json({ error: "Invalid credentials" });
+    }
+    
+    const token = jwt.sign({ id: user.id, email: user.email }, SECRET, { expiresIn: '24h' });
+    console.log(`🔑 User logged in: ${email}`);
+    res.json({ token, user: { id: user.id, email: user.email } });
+});
 
-  app.listen(5000, () => {
-    console.log("🚀 Server running on http://localhost:5000");
-  });
-}
+/* ---------------- AUTH MIDDLEWARE ---------------- */
+const verifyToken = (req, res, next) => {
+    let token = req.headers.authorization;
+    if (!token) return res.status(401).json({ error: "Access denied" });
 
-bootstrap();
+    // Handle 'Bearer <token>' format if sent
+    if (token.startsWith('Bearer ')) token = token.slice(7, token.length);
+
+    try {
+        req.user = jwt.verify(token, SECRET);
+        next();
+    } catch (err) { 
+        res.status(400).json({ error: "Invalid token" }); 
+    }
+};
+
+/* ---------------- FILE SYSTEM ---------------- */
+app.get("/files", verifyToken, (req, res) => {
+    const userDir = path.join(BASE_DIR, req.user.id);
+    if (!fs.existsSync(userDir)) return res.json([]);
+    
+    const files = fs.readdirSync(userDir).map(file => ({
+        name: file,
+        content: fs.readFileSync(path.join(userDir, file), "utf-8")
+    }));
+    res.json(files);
+});
+
+app.post("/files/save", verifyToken, (req, res) => {
+    const { fileName, content } = req.body;
+    const userDir = path.join(BASE_DIR, req.user.id);
+    if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true });
+    
+    fs.writeFileSync(path.join(userDir, fileName), content);
+    res.json({ success: true });
+});
+
+/* ---------------- GROQ AI ---------------- */
+app.post("/api/ai", verifyToken, async (req, res) => {
+    const { prompt, fileName, fileContent } = req.body;
+    try {
+        const chat = await groq.chat.completions.create({
+            messages: [
+                { role: "system", content: "You are a senior developer. Return ONLY raw code without explanations or backticks." },
+                { role: "user", content: `File: ${fileName}\nTask: ${prompt}\nCode:\n${fileContent}` }
+            ],
+            model: "llama3-8b-8192",
+        });
+        res.json({ code: chat.choices[0].message.content });
+    } catch (err) { 
+        console.error("AI Error:", err.message);
+        res.status(500).json({ error: "AI generation failed" }); 
+    }
+});
+
+/* ---------------- START ---------------- */
+const PORT = 5000;
+app.listen(PORT, () => {
+    console.log(`------------------------------------------`);
+    console.log(`🚀 Curvix Pro Backend: http://localhost:${PORT}`);
+    console.log(`📂 Users File: ${path.resolve(USERS_FILE)}`);
+    console.log(`------------------------------------------`);
+});

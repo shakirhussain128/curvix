@@ -1,84 +1,261 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Curvix IDE - A modern, professional code editor for web development" />
-    <meta name="keywords" content="IDE, code editor, JavaScript, React, Monaco, development" />
-    <meta name="author" content="Curvix Team" />
-    <meta property="og:title" content="Curvix IDE" />
-    <meta property="og:description" content="A sleek, user-friendly code editor built with React and Monaco" />
-    <meta property="og:type" content="website" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Curvix IDE - Professional Code Editor</title>
+<head>
+    <meta charset="UTF-8">
+    <title>Curvix Pro Ultra | Enterprise Edition</title>
+    <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/editor/editor.main.min.css">
     <style>
-      body {
-        margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        background: #070912;
-        color: #e2e8f0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        overflow: hidden;
-      }
-      .loading {
-        text-align: center;
-        animation: fadeIn 1s ease-in-out;
-      }
-      .loading h1 {
-        font-size: 2rem;
-        margin-bottom: 1rem;
-        color: #2563eb;
-      }
-      .loading p {
-        font-size: 1.2rem;
-        margin-bottom: 2rem;
-      }
-      .spinner {
-        border: 4px solid #1f2937;
-        border-top: 4px solid #2563eb;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-        margin: 0 auto;
-      }
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      #root {
-        display: none;
-      }
-      #root.loaded {
-        display: block;
-      }
+        :root { 
+            --bg: #181818; --side: #202020; --accent: #007acc; --header: #2d2d2d; 
+            --text: #e0e0e0; --success: #28a745; --border: #333;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; }
+
+        /* --- Header & Layout --- */
+        .navbar { height: 45px; background: var(--header); display: flex; align-items: center; padding: 0 15px; justify-content: space-between; border-bottom: 1px solid var(--border); }
+        .logo { font-weight: 800; font-size: 18px; letter-spacing: 1px; color: var(--accent); }
+        .logo span { color: white; font-weight: 300; }
+        
+        .main-content { display: flex; flex: 1; overflow: hidden; }
+
+        /* --- Sidebar & Explorer --- */
+        .sidebar { width: 240px; background: var(--side); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .sidebar-title { padding: 10px 15px; font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase; display: flex; justify-content: space-between; }
+        .file-list { flex: 1; overflow-y: auto; }
+        .file-item { padding: 8px 20px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: #aaa; transition: 0.2s; }
+        .file-item:hover { background: #2a2d2e; color: white; }
+        .file-item.active { background: #37373d; color: white; border-left: 3px solid var(--accent); }
+
+        /* --- Editor & Tabs --- */
+        .editor-zone { flex: 1; display: flex; flex-direction: column; background: var(--bg); }
+        .tabs-bar { height: 35px; background: #252526; display: flex; overflow-x: auto; border-bottom: 1px solid var(--border); }
+        .tab { padding: 0 15px; display: flex; align-items: center; font-size: 12px; background: #2d2d2d; border-right: 1px solid #1e1e1e; cursor: pointer; color: #999; }
+        .tab.active { background: var(--bg); color: white; border-top: 1px solid var(--accent); }
+        .tab-close { margin-left: 8px; font-size: 10px; opacity: 0.5; }
+        .tab-close:hover { opacity: 1; color: #ef5350; }
+
+        /* --- Terminal & Preview --- */
+        .bottom-panel { height: 180px; background: #121212; border-top: 1px solid var(--border); display: flex; flex-direction: column; }
+        .panel-header { padding: 5px 15px; background: #1e1e1e; font-size: 11px; font-weight: bold; border-bottom: 1px solid #333; display: flex; gap: 15px; }
+        .terminal-body { flex: 1; padding: 10px; font-family: 'Consolas', monospace; font-size: 12px; overflow-y: auto; color: #ccc; line-height: 1.5; }
+
+        .preview-pane { width: 350px; background: white; border-left: 1px solid var(--border); display: flex; flex-direction: column; }
+        iframe { flex: 1; border: none; }
+
+        /* --- Status Bar --- */
+        .status-bar { height: 22px; background: var(--accent); color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: 11px; }
+
+        /* --- Floating AI Window --- */
+        #ai-trigger { position: fixed; bottom: 40px; right: 20px; width: 50px; height: 50px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 1000; font-size: 20px; }
+        #ai-panel { position: fixed; bottom: 100px; right: 20px; width: 350px; height: 450px; background: #252526; border-radius: 8px; border: 1px solid #444; display: none; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 1000; }
+        
+        .hidden { display: none !important; }
     </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <div class="loading" id="loading">
-      <h1>Curvix IDE</h1>
-      <p>Loading your development environment...</p>
-      <div class="spinner"></div>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="logo">CURVIX <span>PRO ULTRA</span></div>
+    <div style="display:flex; gap:10px;">
+        <button onclick="runCode()" style="background:var(--success); border:none; color:white; padding:5px 15px; border-radius:3px; cursor:pointer; font-weight:bold;">▶ RUN</button>
+        <button onclick="toggleSettings()" style="background:#444; border:none; color:white; padding:5px 10px; border-radius:3px; cursor:pointer;">⚙ Settings</button>
     </div>
-    <script type="module" src="/src/main.tsx"></script>
-    <script>
-      // Hide loading screen once React app is ready
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          document.getElementById('loading').style.display = 'none';
-          document.getElementById('root').classList.add('loaded');
-        }, 1000); // Small delay for smooth transition
-      });
-    </script>
-  </body>
+</div>
+
+<div class="main-content">
+    <div class="sidebar">
+        <div class="sidebar-title"><span>Explorer</span><span onclick="createNewFile()" style="cursor:pointer;">+ New</span></div>
+        <div class="file-list" id="file-list"></div>
+    </div>
+
+    <div class="editor-zone">
+        <div class="tabs-bar" id="tabs-bar"></div>
+        <div id="monaco-editor" style="flex:1;"></div>
+        <div class="bottom-panel">
+            <div class="panel-header">
+                <span style="color:var(--accent)">TERMINAL</span>
+                <span style="opacity:0.5">DEBUG CONSOLE</span>
+                <span style="opacity:0.5">OUTPUT</span>
+            </div>
+            <div class="terminal-body" id="terminal-out">
+                [System] Curvix Pro Engine Initialized...<br>
+                [System] All modules loaded. Ready for code execution.
+            </div>
+        </div>
+    </div>
+
+    <div class="preview-pane" id="preview-box">
+        <div style="background:#eee; color:#333; padding:5px 10px; font-size:10px; font-weight:bold; border-bottom:1px solid #ccc;">WEB PREVIEW</div>
+        <iframe id="preview-frame"></iframe>
+    </div>
+</div>
+
+<div class="status-bar">
+    <div id="status-left">Ready</div>
+    <div id="status-right">Line: 1, Col: 1 | UTF-8 | JavaScript</div>
+</div>
+
+<!-- AI Window -->
+<div id="ai-trigger" onclick="toggleAI()">✨</div>
+<div id="ai-panel">
+    <div style="padding:12px; background:#333; display:flex; justify-content:space-between; font-size:13px; font-weight:bold;">
+        <span>Curvix AI Assistant</span>
+        <span onclick="toggleAI()" style="cursor:pointer;">✕</span>
+    </div>
+    <div id="ai-history" style="flex:1; padding:15px; overflow-y:auto; font-size:12px; background:#1e1e1e;"></div>
+    <div style="padding:10px; border-top:1px solid #444;">
+        <textarea id="ai-input" placeholder="Ask anything about your code..." style="width:100%; height:60px; background:#121212; border:1px solid #444; color:white; padding:8px; border-radius:4px; resize:none;"></textarea>
+        <button onclick="askAI()" id="ai-btn" style="width:100%; margin-top:8px; padding:8px; background:var(--accent); border:none; color:white; border-radius:4px; cursor:pointer;">Generate / Explain</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+<script>
+    const API_URL = "https://urban-funicular-97j9x4vrvvw6hg5w-5000.app.github.dev";
+    let editor, activeFile = 'index.html';
+    let openFiles = ['index.html', 'style.css'];
+    
+    let files = JSON.parse(localStorage.getItem('curvix_files')) || {
+        'index.html': { content: '<h1>Curvix Pro</h1>\n<p>Start coding!</p>', lang: 'html' },
+        'style.css': { content: 'body { background: #181818; color: white; font-family: sans-serif; padding: 20px; }', lang: 'css' }
+    };
+
+    // 1. Core Logic
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
+    require(['vs/editor/editor.main'], function() {
+        editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+            value: files[activeFile].content,
+            language: files[activeFile].lang,
+            theme: 'vs-dark',
+            automaticLayout: true,
+            fontSize: 14,
+            minimap: { enabled: true }
+        });
+
+        // Update Position in Status Bar
+        editor.onDidChangeCursorPosition(e => {
+            document.getElementById('status-right').innerText = `Line: ${e.position.lineNumber}, Col: ${e.position.column} | UTF-8 | ${activeFile.split('.').pop()}`;
+        });
+
+        editor.onDidChangeModelContent(() => {
+            files[activeFile].content = editor.getValue();
+            localStorage.setItem('curvix_files', JSON.stringify(files));
+            document.getElementById('status-left').innerText = "Typing...";
+            clearTimeout(window.saveTimeout);
+            window.saveTimeout = setTimeout(() => { document.getElementById('status-left').innerText = "Saved"; }, 1000);
+        });
+
+        renderAll();
+    });
+
+    function renderAll() {
+        renderSidebar();
+        renderTabs();
+    }
+
+    function renderSidebar() {
+        const list = document.getElementById('file-list');
+        list.innerHTML = '';
+        Object.keys(files).forEach(f => {
+            const div = document.createElement('div');
+            div.className = `file-item ${f === activeFile ? 'active' : ''}`;
+            div.innerHTML = `📄 ${f}`;
+            div.onclick = () => switchFile(f);
+            list.appendChild(div);
+        });
+    }
+
+    function renderTabs() {
+        const bar = document.getElementById('tabs-bar');
+        bar.innerHTML = '';
+        openFiles.forEach(f => {
+            const tab = document.createElement('div');
+            tab.className = `tab ${f === activeFile ? 'active' : ''}`;
+            tab.innerHTML = `${f} <span class="tab-close" onclick="closeTab('${f}', event)">✕</span>`;
+            tab.onclick = () => switchFile(f);
+            bar.appendChild(tab);
+        });
+    }
+
+    function switchFile(f) {
+        activeFile = f;
+        if(!openFiles.includes(f)) openFiles.push(f);
+        editor.setValue(files[f].content);
+        const lang = f.endsWith('.py') ? 'python' : f.endsWith('.js') ? 'javascript' : f.endsWith('.html') ? 'html' : 'css';
+        monaco.editor.setModelLanguage(editor.getModel(), lang);
+        
+        document.getElementById('preview-box').style.display = (['html','css','js'].includes(f.split('.').pop())) ? 'flex' : 'none';
+        renderAll();
+    }
+
+    // 2. Actions
+    async function runCode() {
+        const term = document.getElementById('terminal-out');
+        term.innerHTML += `<br><span style="color:var(--accent)">[Run]</span> Executing ${activeFile}...`;
+        
+        const ext = activeFile.split('.').pop();
+        if(['html','css','js'].includes(ext)) {
+            const doc = `<html><head><style>${files['style.css'].content}</style></head><body>${files['index.html'].content}</body></html>`;
+            document.getElementById('preview-frame').srcdoc = doc;
+            term.innerHTML += `<br><span style="color:var(--success)">[Success]</span> View output in Preview pane.`;
+        } else {
+            try {
+                const res = await fetch(`${API_URL}/api/run`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fileName: activeFile, content: files[activeFile].content })
+                });
+                const data = await res.json();
+                term.innerHTML += `<br><span style="color:#00ff41;">> Output:</span><br>${data.output.replace(/\n/g, '<br>')}`;
+            } catch(e) { term.innerHTML += `<br><span style="color:#ef5350;">[Error]</span> Server offline.`; }
+        }
+        term.scrollTop = term.scrollHeight;
+    }
+
+    async function askAI() {
+        const input = document.getElementById('ai-input');
+        const history = document.getElementById('ai-history');
+        const btn = document.getElementById('ai-btn');
+        if(!input.value) return;
+
+        history.innerHTML += `<div style="color:var(--accent); margin-bottom:10px;"><b>You:</b> ${input.value}</div>`;
+        btn.innerText = "Processing...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`${API_URL}/api/ai`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: input.value, fileName: activeFile, fileContent: editor.getValue() })
+            });
+            const data = await res.json();
+            if(data.code) {
+                editor.setValue(data.code);
+                history.innerHTML += `<div style="color:#4caf50; margin-bottom:10px;"><b>AI:</b> Code updated! Check the editor.</div>`;
+            }
+        } catch(e) { history.innerHTML += `<div style="color:#ef5350;">Error connecting to AI server.</div>`; }
+        
+        btn.innerText = "Generate / Explain";
+        btn.disabled = false;
+        input.value = '';
+        history.scrollTop = history.scrollHeight;
+    }
+
+    function createNewFile() {
+        const n = prompt("File name:");
+        if(n) { files[n] = { content: '', lang: 'plaintext' }; switchFile(n); }
+    }
+
+    function toggleAI() {
+        const p = document.getElementById('ai-panel');
+        p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function closeTab(f, e) {
+        e.stopPropagation();
+        openFiles = openFiles.filter(t => t !== f);
+        if(activeFile === f && openFiles.length > 0) switchFile(openFiles[0]);
+        renderTabs();
+    }
+</script>
+</body>
 </html>
